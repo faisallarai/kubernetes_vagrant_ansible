@@ -1,5 +1,6 @@
 # Requirements
 ```
+Host (Memory 16GB)
 VirtualBox
 Vagrant 
 Ansible
