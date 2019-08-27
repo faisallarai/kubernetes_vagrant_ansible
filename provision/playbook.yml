@@ -44,24 +44,30 @@
         - ip_vs_wrr
         - ip_vs_sh
         - nf_conntrack_ipv4
-        - sysctl:
-          name: net.ipv4.ip_forward
-          value: 1
-          state: present
-          reload: true
-          sysctl_set: true
-        - service:
-          name: docker
-          state: started
-          enabled: true
-        - service:
-          name: ntp
-          state: started
-          enabled: true
-        - service:
-          name: kubelet
-          state: started
-          enabled: true
+    - name: kernel | Set ip forwarding on in proc and in the sysctl file and reload if necessary
+      become: true
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: true
+        sysctl_set: true
+    - name: Docker | Enabling the following services (docker, ntp, kubelet)
+      service:
+        name: docker
+        state: started
+        enabled: true
+      service:
+        name: ntp
+        state: started
+        enabled: true
+      service:
+        name: kubelet
+        state: started
+        enabled: true
+    - name: Master | Enable docker
+      become: true
+      command: "systemctl enable docker"
     - name: Master | Adding net bridge ip6tables config file
       become: true
       lineinfile:
@@ -76,7 +82,7 @@
         state: present
     - name: Master | Initialize kube
       become: true
-      shell: "sysctl -p && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16"
+      shell: "rm $HOME/.kube/config && ipvsadm --clear && iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && kubeadm reset -f && pvsadmin clear && sysctl -p && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16"
       args:
         creates: /etc/kubeadm-join.sh
       register: kubeadm_out
