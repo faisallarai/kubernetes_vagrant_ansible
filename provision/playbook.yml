@@ -1,113 +1,20 @@
-- hosts: all
-  tasks:
-    - name: Make sure that we can connect to all the boxes
-      ping:
-    - name: Updating cache repository
-      shell: "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add && apt-get -y update && apt-get install -y apt-transport-https"
-      become: true
-    - name: Download packages
-      become: true
-      apt_repository:
-        repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
-        state: present
-    - name: Install docker and kubernetes
-      become: true
-      apt: 
-        name: "{{ item }}"
-        state: present
-        allow_unauthenticated: true
-      with_items:
-        - docker.io
-        - kubelet
-        - kubeadm
-        - kubectl
-        - ntp
-    - name: Kernel | Confirming following kernel modules for kubernetes
-      become: true
-      command: modprobe {{ item }}
-      with_items: 
-        - ip_vs
-        - ip_vs_rr
-        - ip_vs_wrr
-        - ip_vs_sh
-        - nf_conntrack_ipv4
-    - name: Kernel | Adding modules as a line in etc/modules
-      become: true
-      lineinfile: 
-        path: /etc/modules 
-        line: "{{ item }}"
-        create: true
-        state: present
-      with_items:
-        - ip_vs
-        - ip_vs_rr
-        - ip_vs_wrr
-        - ip_vs_sh
-        - nf_conntrack_ipv4
-    - name: kernel | Set ip forwarding on in proc and in the sysctl file and reload if necessary
-      become: true
-      sysctl:
-        name: net.ipv4.ip_forward
-        value: 1
-        state: present
-        reload: true
-        sysctl_set: true
-    - name: Docker | Enabling the following services (docker, ntp, kubelet)
-      service:
-        name: docker
-        state: started
-        enabled: true
-      service:
-        name: ntp
-        state: started
-        enabled: true
-      service:
-        name: kubelet
-        state: started
-        enabled: true
-    - name: Master | Enable docker
-      become: true
-      command: "systemctl enable docker"
-    - name: Master | Adding net bridge ip6tables config file
-      become: true
-      lineinfile:
-        dest: /etc/sysctl.conf
-        line: 'net.bridge.bridge-nf-call-ip6tables = 1'
-        state: present
-    - name: Master | Adding net bridge iptables config file
-      become: true
-      lineinfile:
-        dest: /etc/sysctl.conf
-        line: 'net.bridge.bridge-nf-call-iptables = 1'
-        state: present
-    - name: Master | Initialize kube
-      become: true
-      shell: "rm $HOME/.kube/config && ipvsadm --clear && iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && kubeadm reset -f && pvsadmin clear && sysctl -p && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16"
-      args:
-        creates: /etc/kubeadm-join.sh
-      register: kubeadm_out
-    - name: Master | Adding kubeadm stdout to a file
-      lineinfile: 
-        path: /etc/kubeadm-join.sh
-        line: "{{ kubeadm_out.stdout_lines[-1] }}"
-        create: true
-      when: kubeadm_out.stdout.find("kubeadm join") != -1
-    - name: Master | Starting kubelet service
-      service:
-        name: kubelet
-        state: started
-        enabled: true
-    - name: Master | Creating a directory
-      file: 
-        name: /etc/kubectl
-        state: directory
-    - name: Master | Fixing configmap for proxy
-      become: true
-      shell: >
-          export KUBECONFIG=/etc/kubernetes/admin.conf ;
-          kubectl -n kube-system get cm/kube-proxy -o yaml
-          | sed -e 's!clusterCIDR: ""!clusterCIDR: "10.0.0.0/24"!' >/etc/kubectl/kube-proxy.map ;
-          kubectl -n kube-system replace cm/kube-proxy -f  /etc/kubectl/kube-proxy.map ;
-          kubectl -n kube-system delete pods -l k8s-app=kube-proxy
-      args:
-        creates: /etc/kubectl/kube-proxy.map
+---
+- hosts: master
+  gather_facts: false
+  become_user: root
+  become: yes
+  tags:
+    - common
+  roles:
+    - common
+    - master
+
+- hosts: worker
+  gather_facts: fasle
+  become_user: root
+  become: yes
+  tags:
+    - worker
+  roles:
+    - common
+    - worker

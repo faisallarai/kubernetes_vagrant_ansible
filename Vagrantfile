@@ -11,16 +11,6 @@ nodes = [
     :hostname => 'node1',
     :ip => '10.0.0.11',
     :id => '11'
-  },
-  {
-    :hostname => 'node2',
-    :ip => '10.0.0.12',
-    :id => '11'
-  },
-  {
-    :hostname => 'node3',
-    :ip => '10.0.0.13',
-    :id => '10'
   }
 ]
 
@@ -45,7 +35,7 @@ Vagrant.configure("2") do |config|
       nodeconfig.vm.network :private_network, ip: node[:ip], virtualbox__intnet: domain
       nodeconfig.vm.provider :virtualbox do |vb|
         vb.name = node[:hostname]+"."+domain
-        vb.memory = 1024
+        vb.memory = 2048
         vb.cpus = 2
         vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
         vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']

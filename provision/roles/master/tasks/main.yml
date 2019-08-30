@@ -1,0 +1,9 @@
+- name: Initialize kube
+  become: yes
+  shell: kubeadm reset -f && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16
+- name: Adding Netwtork Plugin
+  become: yes
+  shell: export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml && kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+- name: Saving the Kubeadm join commands
+  become: yes
+  shell: kubeadm token create --print-join-command >> /etc/kubeadm_join_cmd.sh && chmod +x /etc/kubeadm_join_cmd.sh
