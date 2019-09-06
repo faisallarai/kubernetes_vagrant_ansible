@@ -9,34 +9,27 @@
 - name: Making sure that the boxes are alive
   ping:
 - name: Updating cache repository
-  shell: sudo apt-get update && sudo apt-get install -y apt-transport-https
   become: yes
-- name: Downloading packages 
-  shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-- name: Change repository Ubuntu 18.04
+  shell: apt-get update
+  args:
+    warn: false
+- name: Adding the GPG key for google
+  become: yes
+  shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+- name: Adding repository to APT sources - Ubuntu 18.04
   copy:
     src: kubernetes.list
     dest: /etc/apt/sources.list.d/
     backup: yes
-- name: Update repository and Upgrade packages
-  apt:
-    upgrade: dist
-    update_cache: yes
-- name: Installing | docker
+  notify: update repository
+- name: Updating cache repository
   become: yes
-  apt: 
-    name: ['docker.io','ntp']
-    state: present
-    allow_unauthenticated: true
-- name: Updating cache respository
-  become: yes
-  shell: apt-get update && apt-get install -y apt-transport-https curl
-- name: Downloading
-  become: yes
-  shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  shell: apt-get update
+  args:
+    warn: false
 - name: Installing Kubelet
   become: yes
-  shell: apt-get update && apt-get install -y kubelet kubeadm kubectl && apt-mark hold kubelet kubeadm kubectl
+  shell: apt-get install kubelet kubeadm kubectl && apt-mark hold kubelet kubeadm kubectl
 - name: Reloading kubelet
   become: yes
   shell: systemctl start docker && systemctl enable docker && systemctl daemon-reload && systemctl restart kubelet

@@ -1,2 +1,5 @@
 ---
-# handlers file for master
+- name: update repository
+  apt:
+    upgrade: dist
+    update_cache: yes

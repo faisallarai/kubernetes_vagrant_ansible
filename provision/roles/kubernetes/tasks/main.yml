@@ -1,0 +1,49 @@
+---
+- name: Install aptitude using apt
+  apt: 
+    name: aptitude
+    state: latest 
+    update_cache: yes 
+    force_apt_get: yes
+
+- name: Install required system packages
+  apt: name={{ item }} state=latest update_cache=yes
+  loop: [ 'apt-transport-https', 'curl']
+
+- name: Add Kubernetes GPG apt Key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add Kubernetes Repository
+  apt_repository:
+    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+
+- name: Update apt and Install required kube packages
+  apt: name={{ item }} state=latest update_cache=yes
+  loop: [ 'kubelet', 'kubeadm', 'kubectl']
+
+- name: Put kubelet package on hold
+  shell: >
+         apt-mark showholds | grep -q kubelet
+         && echo -n HOLDED
+         || apt-mark hold kubelet
+  register: kubelet_hold
+  changed_when: kubelet_hold.stdout != 'HOLDED'
+
+- name: Put kubeadm package on hold
+  shell: >
+         apt-mark showholds | grep -q kubeadm
+         && echo -n HOLDED
+         || apt-mark hold kubeadm
+  register: kubeadm_hold
+  changed_when: kubeadm_hold.stdout != 'HOLDED'
+
+- name: Put kubectl package on hold
+  shell: >
+         apt-mark showholds | grep -q kubectl
+         && echo -n HOLDED
+         || apt-mark hold kubectl
+  register: kubectl_hold
+  changed_when: kubectl_hold.stdout != 'HOLDED'

@@ -1,9 +1,60 @@
-- name: Initialize kube
+- name: Initialize kubeadm on master
   become: yes
   shell: kubeadm reset -f && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16
-- name: Adding Netwtork Plugin
+  register: kubeadm_out
+  args:
+    creates: /etc/kubeadm-join.sh
+
+- name: Printing kubeadm init result
+  debug:
+    var: kubeadm_out
+  
+- name: Adding join to /etc/kubeadm-join.sh
+  lineinfile:
+    path: /etc/kubeadm-join.sh
+    line: "{{kubeadm_out.stdout_lines[-2]}}"
+    create: yes
+    state: present
+  register: changed
+  when: kubeadm_out.stdout.find("kubeadm join") != -1
+
+- name: Adding the rest to /etc/kubeadm-join.sh
+  lineinfile:
+    path: /etc/kubeadm-join.sh
+    line: "{{kubeadm_out.stdout_lines[-1]}}"
+    insertafter: '\\'
+    state: present
+  when: kubeadm_out.changed
+
+- name: ansible create directory with mode setting example
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    owner: vagrant
+    group: vagrant
+
+- name: Copy file with owner and permissions
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/vagrant/.kube/config
+    remote_src: yes
+    owner: vagrant
+    group: vagrant
+
+- name: Install calico pod network
+  become: no
+  command: kubectl apply -f https://docs.projectcalico.org/v3.9/getting-started/kubernetes/installation/hosted/calico.yaml
+  changed_when: false
+
+- name: Generate join command
   become: yes
-  shell: export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml && kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
-- name: Saving the Kubeadm join commands
-  become: yes
-  shell: kubeadm token create --print-join-command >> /etc/kubeadm_join_cmd.sh && chmod +x /etc/kubeadm_join_cmd.sh
+  command: kubeadm token create --print-join-command
+  register: join_command
+
+- name: Printing result from token task
+  debug:
+    var: join_command
+
+- name: Copy join command to local file
+  become: no
+  local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"

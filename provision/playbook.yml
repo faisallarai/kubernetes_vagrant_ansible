@@ -1,20 +1,22 @@
 ---
 - hosts: master
-  gather_facts: false
+  gather_facts: true
   become_user: root
   become: yes
   tags:
-    - common
+    - master
   roles:
-    - common
+    - docker
+    - kubernetes
     - master
 
 - hosts: worker
-  gather_facts: fasle
+  gather_facts: true
   become_user: root
   become: yes
   tags:
     - worker
   roles:
-    - common
+    - docker
+    - kubernetes
     - worker
