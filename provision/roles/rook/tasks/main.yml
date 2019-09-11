@@ -1,0 +1,89 @@
+---
+# - name: Rook Operator | Add rook chart to cluster
+#   become: no
+#   command: helm repo add rook-stable http://charts.rook.io/stable
+
+# - name: Rook Operator | Update rook repo
+#   become: no
+#   command: helm repo update
+
+# - name: Rook Operator | List rook repo
+#   become: no
+#   command: helm ls --all rook-stable | cat
+#   register: helm_out
+
+# - name: Rook Operator | Show list rook repo
+#   debug:
+#     var: helm_out
+
+# - name: Rook Operator | Install rook storage
+#   become: no
+#   command: helm install rook-stable/rook-ceph --name rook-stable
+#   when: helm_out.stdout == ""
+
+# - name: Rook Operator | Install aptitude using apt
+#   apt: 
+#     name: aptitude
+#     state: latest 
+#     update_cache: yes 
+#     force_apt_get: yes
+
+# - name: Rook Operator | Install required system packages
+#   apt: 
+#     name: ceph-common 
+#     state: latest 
+#     update_cache: yes
+
+- name: Create rook directory
+  become: yes
+  file:
+    path: /var/lib/rook
+    state: directory
+
+- name: Rook Common | Copy common file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/common.yml dest="./common.yml"
+
+- name: Rook Common | Copy the common file to server location
+  become: no
+  copy: src=common.yml dest=/tmp/common.yml mode=0777
+
+- name: Rook Common | Install rook common
+  become: no
+  command: kubectl apply -f /tmp/common.yml 
+
+- name: Rook Operator | Copy operator file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/operator.yml dest="./operator.yml"
+
+- name: Rook Operator | Copy the operator file to server location
+  become: no
+  copy: src=operator.yml dest=/tmp/operator.yml mode=0777
+
+- name: Rook Operator | Install rook operator
+  become: no
+  command: kubectl apply -f /tmp/operator.yml
+  
+- name: Rook Cluster | Copy cluster file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/cluster.yml dest="./cluster.yml"
+
+- name: Rook Cluster | Copy the cluster file to server location
+  become: no
+  copy: src=cluster.yml dest=/tmp/cluster.yml mode=0777
+
+- name: Rook Cluster | Install rook cluster
+  become: no
+  command: kubectl apply -f /tmp/cluster.yml 
+
+- name: Rook Toolbox | Copy toolbox file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/toolbox.yml dest="./toolbox.yml"
+
+- name: Rook Toolbox | Copy the toolbox file to server location
+  become: no
+  copy: src=toolbox.yml dest=/tmp/toolbox.yml mode=0777
+
+- name: Rook Toolbox | Install rook toolbox
+  become: no
+  command: kubectl apply -f /tmp/toolbox.yml

@@ -1,0 +1,63 @@
+---
+# - name: install helm cli via snap
+#   become: yes
+#   command: snap install helm --classic
+
+- name: Retrieve helm binary archive.
+  unarchive:
+    src: https://get.helm.sh/helm-v2.14.3-linux-amd64.tar.gz
+    dest: /tmp
+    creates: /usr/local/bin/helm
+    remote_src: yes
+
+- name: Move helm binary into place.
+  command: >
+    cp /tmp/linux-amd64/helm /usr/local/bin/helm
+    creates=/usr/local/bin/helm
+
+- name: Verify, if Tiller was created
+  become: no
+  shell: kubectl get sa -n kube-system | grep tiller | cat
+  register: tiller_result
+
+- name: Show tiller result
+  debug:
+    msg: "{{ tiller_result }}"
+
+- name: Create tiller
+  become: no
+  command: kubectl -n kube-system create sa tiller
+  when: tiller_result.stdout == ""
+
+- name: Assign to a role helm
+  become: no
+  command: kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+  when: tiller_result.stdout == ""
+
+# - name: Redeploy tiller
+#   become: no
+#   command: >-
+#      kubectl -n kube-system patch deploy/tiller-deploy -p 
+#      '{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'
+#   when: tiller_result.stdout == ""
+
+- name: Initialize helm
+  become: no
+  command: helm init
+  register: helm_init_result
+
+- name: Show helm init result
+  debug:
+    msg: "{{ helm_init_result.stdout_lines }}"
+
+- name: Update Helm repos
+  become: no
+  shell: helm repo update
+
+- name: Verify, if Tiller was installed at last
+  become: no
+  shell: kubectl get pods --namespace kube-system -l name=tiller
+  register: kubectl_kube_system_pods
+  until: kubectl_kube_system_pods.stdout.find("Running") != -1
+  retries: 10
+  delay: 15

@@ -40,11 +40,14 @@
     remote_src: yes
     owner: vagrant
     group: vagrant
+  
+- name: Prinint  
+  debug: var=shellout
 
 - name: Install calico pod network
   become: no
-  command: kubectl apply -f https://docs.projectcalico.org/v3.9/getting-started/kubernetes/installation/hosted/calico.yaml
-  changed_when: false
+  #command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  command: kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
 
 - name: Generate join command
   become: yes
@@ -58,3 +61,11 @@
 - name: Copy join command to local file
   become: no
   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+- name: Allow master to run pods
+  become: no
+  command: kubectl get pod -n kube-system
+
+
+
+

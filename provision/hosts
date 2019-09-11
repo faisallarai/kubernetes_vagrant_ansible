@@ -1,6 +1,8 @@
 [master]
-master ansible_host=master ansible_port=2210
+master-node ansible_host=master-node ansible_port=2210
 [worker]
-node1 ansible_host=node1 ansible_port=2211
+worker-node1 ansible_host=worker-node1 ansible_port=2211
+worker-node2 ansible_host=worker-node2 ansible_port=2212
+worker-node3 ansible_host=worker-node3 ansible_port=2213
 
 

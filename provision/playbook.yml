@@ -1,22 +1,6 @@
 ---
-- hosts: master
-  gather_facts: true
-  become_user: root
-  become: yes
-  tags:
-    - master
-  roles:
-    - docker
-    - kubernetes
-    - master
+- import_playbook: master.yml
+- import_playbook: worker.yml
+- import_playbook: helm.yml
+- import_playbook: storage.yml
 
-- hosts: worker
-  gather_facts: true
-  become_user: root
-  become: yes
-  tags:
-    - worker
-  roles:
-    - docker
-    - kubernetes
-    - worker

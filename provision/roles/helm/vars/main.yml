@@ -1,0 +1,4 @@
+---
+helm_env:
+  - key: HELM-HOME 
+    value: /root/.helm

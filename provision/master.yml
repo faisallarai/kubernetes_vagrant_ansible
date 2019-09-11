@@ -1,0 +1,9 @@
+---
+- hosts: master
+  gather_facts: true
+  become: yes
+  roles:
+    - docker
+    - kubernetes
+    - master
+
