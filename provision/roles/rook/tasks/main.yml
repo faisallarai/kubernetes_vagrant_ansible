@@ -87,3 +87,27 @@
 - name: Rook Toolbox | Install rook toolbox
   become: no
   command: kubectl apply -f /tmp/toolbox.yml
+
+- name: Rook File System | Copy file system file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/filesystem.yml dest="./filesystem.yml"
+
+- name: Rook File System | Copy the file system file to server location
+  become: no
+  copy: src=filesystem.yml dest=/tmp/filesystem.yml mode=0777
+
+- name: Rook File System | Install rook file system
+  become: no
+  command: kubectl apply -f /tmp/filesystem.yml
+
+- name: Rook Storage Class | Copy storage class file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/storageclass.yml dest="./storageclass.yml"
+
+- name: Rook Storage Class | Copy the storage class file to server location
+  become: no
+  copy: src=storageclass.yml dest=/tmp/storageclass.yml mode=0777
+
+- name: Rook Storage Class | Install rook storage class
+  become: no
+  command: kubectl apply -f /tmp/storageclass.yml

@@ -105,7 +105,7 @@ spec:
         # http://docs.ceph.com/docs/master/cephfs/experimental-features/#multiple-filesystems-within-a-ceph-cluster
         # which might cause mons to crash as seen in https://github.com/rook/rook/issues/1027
         - name: ROOK_ALLOW_MULTIPLE_FILESYSTEMS
-          value: "false"
+          value: "true"
         # The logging level for the operator: INFO | DEBUG
         - name: ROOK_LOG_LEVEL
           value: "INFO"
