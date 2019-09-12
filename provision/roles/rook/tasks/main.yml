@@ -39,18 +39,18 @@
   file:
     path: /var/lib/rook
     state: directory
+    mode: '0777'
+
+- name: Create registry directory
+  become: yes
+  file:
+    path: /var/lib/registry
+    state: directory
+    mode: '0777'
 
 - name: Rook Common | Copy common file 
   become: no
   local_action: copy content="{{ role_path }}"/files/common.yml dest="./common.yml"
-
-- name: Rook Common | Copy the common file to server location
-  become: no
-  copy: src=common.yml dest=/tmp/common.yml mode=0777
-
-- name: Rook Common | Install rook common
-  become: no
-  command: kubectl apply -f /tmp/common.yml 
 
 - name: Rook Operator | Copy operator file 
   become: no
@@ -60,10 +60,10 @@
   become: no
   copy: src=operator.yml dest=/tmp/operator.yml mode=0777
 
-- name: Rook Operator | Install rook operator
+- name: Rook Common | Copy the common file to server location
   become: no
-  command: kubectl apply -f /tmp/operator.yml
-  
+  copy: src=common.yml dest=/tmp/common.yml mode=0777
+
 - name: Rook Cluster | Copy cluster file 
   become: no
   local_action: copy content="{{ role_path }}"/files/cluster.yml dest="./cluster.yml"
@@ -71,10 +71,6 @@
 - name: Rook Cluster | Copy the cluster file to server location
   become: no
   copy: src=cluster.yml dest=/tmp/cluster.yml mode=0777
-
-- name: Rook Cluster | Install rook cluster
-  become: no
-  command: kubectl apply -f /tmp/cluster.yml 
 
 - name: Rook Toolbox | Copy toolbox file 
   become: no
@@ -84,10 +80,6 @@
   become: no
   copy: src=toolbox.yml dest=/tmp/toolbox.yml mode=0777
 
-- name: Rook Toolbox | Install rook toolbox
-  become: no
-  command: kubectl apply -f /tmp/toolbox.yml
-
 - name: Rook File System | Copy file system file 
   become: no
   local_action: copy content="{{ role_path }}"/files/filesystem.yml dest="./filesystem.yml"
@@ -96,18 +88,59 @@
   become: no
   copy: src=filesystem.yml dest=/tmp/filesystem.yml mode=0777
 
+- name: Rook Docker Registry | Copy registry file 
+  become: no
+  local_action: copy content="{{ role_path }}"/files/registry.yml dest="./registry.yml"
+
+- name: Rook Docker Registry | Copy the registry file to server location
+  become: no
+  copy: src=registry.yml dest=/tmp/registry.yml mode=0777
+
+- name: Rook Common | Install rook common
+  become: no
+  command: kubectl apply -f /tmp/common.yml 
+
+- name: Rook Operator | Install rook operator
+  become: no
+  command: kubectl apply -f /tmp/operator.yml
+
+- name: Verify, if rook disover is running
+  become: no
+  shell: kubectl get pods -l app=rook-discover -n rook-ceph
+  register: rook_discover_out
+  until: rook_discover_out.stdout.find("Running") != -1
+  retries: 30
+  delay: 20
+
+- name: Show rook discover result
+  debug:
+    var: rook_discover_out
+
+- name: Verify, if rook-ceph-operator is running
+  become: no
+  shell: kubectl get pods -l app=rook-ceph-operator -n rook-ceph
+  register: rook_operator_out
+  until: rook_operator_out.stdout.find("Running") != -1
+  retries: 30
+  delay: 20
+
+- name: Show rook operator result
+  debug:
+    var: rook_operator_out
+
+- name: Rook Cluster | Install rook cluster
+  become: no
+  command: kubectl apply -f /tmp/cluster.yml 
+
+- name: Rook Toolbox | Install rook toolbox
+  become: no
+  command: kubectl apply -f /tmp/toolbox.yml
+
 - name: Rook File System | Install rook file system
   become: no
   command: kubectl apply -f /tmp/filesystem.yml
 
-- name: Rook Storage Class | Copy storage class file 
+- name: Rook Docker Registry | Install docker registry
   become: no
-  local_action: copy content="{{ role_path }}"/files/storageclass.yml dest="./storageclass.yml"
+  command: kubectl apply -f /tmp/registry.yml
 
-- name: Rook Storage Class | Copy the storage class file to server location
-  become: no
-  copy: src=storageclass.yml dest=/tmp/storageclass.yml mode=0777
-
-- name: Rook Storage Class | Install rook storage class
-  become: no
-  command: kubectl apply -f /tmp/storageclass.yml

@@ -49,6 +49,7 @@ Vagrant.configure("2") do |config|
   nodes.each do |node|
     config.vm.define node[:hostname] do |nodeconfig|
       nodeconfig.vm.box = "ubuntu/bionic64"
+      nodeconfig.disksize.size = '30GB'
       nodeconfig.vm.hostname = node[:hostname]
       nodeconfig.vm.boot_timeout = 300
       nodeconfig.vm.network :forwarded_port, guest: 22, host: node[:port], id: "ssh", auto_correct: true
