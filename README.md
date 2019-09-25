@@ -17,18 +17,19 @@ kubectl
 Calico / flannel (works well metalLB for load balancing)
 Helm
 Rook (Ochestrator for storage services e.g. ceph)
+Ambassador
+MetalLB
 ```
 
 # Optional - On the way
 ```
-Ambassador
+OAuth2 Server
 Istio
 Dashboard
 Prometheus with cAdvisor and Kube state metrics
 Grafana
 ELK
 GitLab
-
 ```
 
 # Add entry to host file
