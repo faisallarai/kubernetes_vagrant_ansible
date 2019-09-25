@@ -1,0 +1,38 @@
+---
+- name: Copy lb file with owner and permission
+  copy:
+    src: files/lb.yml
+    dest: /tmp/lb.yml
+    owner: vagrant
+    group: vagrant
+    mode: u=rw,g=r,o=r
+
+- name: Copy config file with owner and permission
+  copy:
+    src: files/config.yml
+    dest: /tmp/config.yml
+    owner: vagrant
+    group: vagrant
+    mode: u=rw,g=r,o=r
+
+- name: Deploy MetalLB
+  become: no
+  command: kubectl apply -f /tmp/lb.yml
+  changed_when: false
+
+- name: Verify, if metalLB is running
+  become: no
+  shell: kubectl get pods -n metallb-system
+  register: lb_out
+  until: lb_out.stdout.find("Running") != -1
+  retries: 30
+  delay: 20
+
+- name: Show lb result
+  debug:
+    var: lb_out
+
+- name: Deploy MetalLB Config
+  become: no
+  command: kubectl apply -f /tmp/config.yml
+  changed_when: false

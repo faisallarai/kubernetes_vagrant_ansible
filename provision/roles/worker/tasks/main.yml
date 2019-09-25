@@ -1,6 +1,9 @@
 ---
 - name: Copy the join command to server location
-  copy: src=join-command dest=/tmp/join-command.sh mode=0777
+  copy:
+    src: join-command
+    dest: /tmp/join-command.sh
+    mode: 0777
 
 - name: Check if already joined
   stat:
@@ -9,4 +12,4 @@
 
 - name: Join the node to cluster
   command: sh /tmp/join-command.sh
-  when: stat_result.stat.exists == False 
+  when: stat_result.stat.exists == False

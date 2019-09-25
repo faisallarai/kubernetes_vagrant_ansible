@@ -1,39 +1,4 @@
 ---
-# - name: Rook Operator | Add rook chart to cluster
-#   become: no
-#   command: helm repo add rook-stable http://charts.rook.io/stable
-
-# - name: Rook Operator | Update rook repo
-#   become: no
-#   command: helm repo update
-
-# - name: Rook Operator | List rook repo
-#   become: no
-#   command: helm ls --all rook-stable | cat
-#   register: helm_out
-
-# - name: Rook Operator | Show list rook repo
-#   debug:
-#     var: helm_out
-
-# - name: Rook Operator | Install rook storage
-#   become: no
-#   command: helm install rook-stable/rook-ceph --name rook-stable
-#   when: helm_out.stdout == ""
-
-# - name: Rook Operator | Install aptitude using apt
-#   apt: 
-#     name: aptitude
-#     state: latest 
-#     update_cache: yes 
-#     force_apt_get: yes
-
-# - name: Rook Operator | Install required system packages
-#   apt: 
-#     name: ceph-common 
-#     state: latest 
-#     update_cache: yes
-
 - name: Create rook directory
   become: yes
   file:
@@ -48,7 +13,7 @@
     state: directory
     mode: '0777'
 
-- name: Rook Common | Copy common file 
+- name: Rook Common | Copy common file
   become: no
   local_action: copy content="{{ role_path }}"/files/common.yml dest="./common.yml"
 

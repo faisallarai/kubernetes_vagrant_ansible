@@ -34,21 +34,27 @@
   command: kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
   when: tiller_result.stdout == ""
 
-# - name: Redeploy tiller
+# - name: Initialize helm
 #   become: no
-#   command: >-
-#      kubectl -n kube-system patch deploy/tiller-deploy -p 
-#      '{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'
-#   when: tiller_result.stdout == ""
+#   command: helm init --debug
+#   register: helm_init_result
 
-- name: Initialize helm
+- name: Copy tiller file with owner and permission
+  copy:
+    src: files/tiller.yml
+    dest: /tmp/tiller.yml
+    owner: vagrant
+    group: vagrant
+    mode: u=rw,g=r,o=r
+
+- name: Install Tiller
   become: no
-  command: helm init
-  register: helm_init_result
+  command: kubectl apply -f /tmp/tiller.yml
+  changed_when: false
 
-- name: Show helm init result
-  debug:
-    msg: "{{ helm_init_result.stdout_lines }}"
+# - name: Show helm init result
+#   debug:
+#     msg: "{{ helm_init_result.stdout_lines }}"
 
 - name: Update Helm repos
   become: no

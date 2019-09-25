@@ -38,10 +38,13 @@ chmod 0600 /home/vagrant/.ssh/id_rsa
 usermod -a -G vagrant ubuntu
 cp -Rvf /home/vagrant/.ssh /home/ubuntu
 chown -Rvf ubuntu /home/ubuntu
-apt-get -y update
+
+sudo apt-get clean
+sudo sed -i 's/[a-z][a-z].archive.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
+sudo apt-get -y update
+sudo apt-get -y upgrade
 swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-apt-get -y install python-minimal python-apt
 SCRIPT
 
 Vagrant.configure("2") do |config|

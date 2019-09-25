@@ -1,13 +1,16 @@
 ---
 - name: Install aptitude using apt
-  apt: 
+  apt:
     name: aptitude
-    state: latest 
-    update_cache: yes 
+    state: latest
+    update_cache: yes
     force_apt_get: yes
 
 - name: Install required system packages
-  apt: name={{ item }} state=latest update_cache=yes
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
   loop: [ 'apt-transport-https', 'curl']
 
 - name: Add Kubernetes GPG apt Key
@@ -21,7 +24,10 @@
     state: present
 
 - name: Update apt and Install required kube packages
-  apt: name={{ item }} state=latest update_cache=yes
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
   loop: [ 'kubelet', 'kubeadm', 'kubectl']
 
 - name: Put kubelet package on hold

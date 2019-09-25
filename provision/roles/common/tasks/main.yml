@@ -1,35 +1,38 @@
-- name: Confirming product uuid
+---
+- name: Copy local hosts file to etc folder
   become: yes
-  shell: cat /sys/class/dmi/id/product_uuid
-  changed_when: false
-  register: result
-- name: Printing product uuid
-  debug:
-    var: result
-- name: Making sure that the boxes are alive
-  ping:
-- name: Updating cache repository
+  copy: src=hosts dest=/etc/
+
+- name: Add the user 'ubuntu' with a bash shell, appending the group 'vagrant' to the user's groups
+  user:
+    name: ubuntu
+    shell: /bin/bash
+    groups: vagrant
+    append: yes
+
+- name: Copy files in .ssh folder
   become: yes
-  shell: apt-get update
-  args:
-    warn: false
-- name: Adding the GPG key for google
-  become: yes
-  shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-- name: Adding repository to APT sources - Ubuntu 18.04
   copy:
-    src: kubernetes.list
-    dest: /etc/apt/sources.list.d/
-    backup: yes
-  notify: update repository
-- name: Updating cache repository
-  become: yes
-  shell: apt-get update
-  args:
-    warn: false
-- name: Installing Kubelet
-  become: yes
-  shell: apt-get install kubelet kubeadm kubectl && apt-mark hold kubelet kubeadm kubectl
-- name: Reloading kubelet
-  become: yes
-  shell: systemctl start docker && systemctl enable docker && systemctl daemon-reload && systemctl restart kubelet
+    src: /home/vagrant/.ssh/
+    dest: /home/ubuntu/
+    remote_src: yes
+
+- name: Add permissions to folder ubuntu
+  file:
+    path: /home/ubuntu
+    owner: ubuntu
+    group: ubuntu
+
+- name: Update cache
+  apt:
+    name: aptitude
+    state: present
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install required system packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: ['python-minimal', 'python-apt', 'python-setuptools', 'python-pip']

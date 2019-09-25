@@ -1,1 +1,6 @@
-"/Users/faisallarai/Development/devops_projects/kubernetes_vagrant_ansible/provision/roles/rook"/files/common.yml
+---
+- hosts: all
+  gather_facts: true
+  become: yes
+  roles:
+    - common

@@ -1,0 +1,38 @@
+---
+- name: Copy ambassador file with owner and permission
+  copy:
+    src: files/ambassador-rbac.yml
+    dest: /tmp/ambassador-rbac.yml
+    owner: vagrant
+    group: vagrant
+    mode: u=rw,g=r,o=r
+
+- name: Copy ambassador service file with owner and permission
+  copy:
+    src: files/ambassador-service.yml
+    dest: /tmp/ambassador-service.yml
+    owner: vagrant
+    group: vagrant
+    mode: u=rw,g=r,o=r
+
+- name: Deploy Ambassador
+  become: no
+  command: kubectl apply -f /tmp/ambassador-rbac.yml
+  changed_when: false
+
+- name: Verify, if ambassador is running
+  become: no
+  shell: kubectl get pods
+  register: ambassador_out
+  until: ambassador_out.stdout.find("Running") != -1
+  retries: 30
+  delay: 20
+
+- name: Show ambassador result
+  debug:
+    var: ambassador_out
+
+- name: Deploy Ambassador Service
+  become: no
+  command: kubectl apply -f /tmp/ambassador-service.yml
+  changed_when: false

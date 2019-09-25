@@ -1,5 +1,2 @@
 ---
-- name: update repository
-  apt:
-    upgrade: dist
-    update_cache: yes
+# handlers file for common
