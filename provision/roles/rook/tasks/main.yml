@@ -1,73 +1,19 @@
 ---
-- name: Create rook directory
-  become: yes
-  file:
-    path: /var/lib/rook
-    state: directory
-    mode: '0777'
-
-- name: Create registry directory
-  become: yes
-  file:
-    path: /var/lib/registry
-    state: directory
-    mode: '0777'
-
-- name: Rook Common | Copy common file
-  become: no
-  local_action: copy content="{{ role_path }}"/files/common.yml dest="./common.yml"
-
-- name: Rook Operator | Copy operator file 
-  become: no
-  local_action: copy content="{{ role_path }}"/files/operator.yml dest="./operator.yml"
-
-- name: Rook Operator | Copy the operator file to server location
-  become: no
-  copy: src=operator.yml dest=/tmp/operator.yml mode=0777
-
-- name: Rook Common | Copy the common file to server location
-  become: no
-  copy: src=common.yml dest=/tmp/common.yml mode=0777
-
-- name: Rook Cluster | Copy cluster file 
-  become: no
-  local_action: copy content="{{ role_path }}"/files/cluster.yml dest="./cluster.yml"
-
-- name: Rook Cluster | Copy the cluster file to server location
-  become: no
-  copy: src=cluster.yml dest=/tmp/cluster.yml mode=0777
-
-- name: Rook Toolbox | Copy toolbox file 
-  become: no
-  local_action: copy content="{{ role_path }}"/files/toolbox.yml dest="./toolbox.yml"
-
-- name: Rook Toolbox | Copy the toolbox file to server location
-  become: no
-  copy: src=toolbox.yml dest=/tmp/toolbox.yml mode=0777
-
-- name: Rook File System | Copy file system file 
-  become: no
-  local_action: copy content="{{ role_path }}"/files/filesystem.yml dest="./filesystem.yml"
-
-- name: Rook File System | Copy the file system file to server location
-  become: no
-  copy: src=filesystem.yml dest=/tmp/filesystem.yml mode=0777
-
-- name: Rook Docker Registry | Copy registry file 
-  become: no
-  local_action: copy content="{{ role_path }}"/files/registry.yml dest="./registry.yml"
-
-- name: Rook Docker Registry | Copy the registry file to server location
-  become: no
-  copy: src=registry.yml dest=/tmp/registry.yml mode=0777
+- name: Copy Rook files
+  copy:
+    src: files/
+    dest: /tmp/rook
+  changed_when: false
 
 - name: Rook Common | Install rook common
   become: no
-  command: kubectl apply -f /tmp/common.yml 
+  command: kubectl apply -f /tmp/rook/common.yml
+  changed_when: false
 
 - name: Rook Operator | Install rook operator
   become: no
-  command: kubectl apply -f /tmp/operator.yml
+  command: kubectl apply -f /tmp/rook/operator.yml
+  changed_when: false
 
 - name: Verify, if rook disover is running
   become: no
@@ -75,7 +21,7 @@
   register: rook_discover_out
   until: rook_discover_out.stdout.find("Running") != -1
   retries: 30
-  delay: 20
+  delay: 100
 
 - name: Show rook discover result
   debug:
@@ -87,7 +33,7 @@
   register: rook_operator_out
   until: rook_operator_out.stdout.find("Running") != -1
   retries: 30
-  delay: 20
+  delay: 100
 
 - name: Show rook operator result
   debug:
@@ -95,17 +41,40 @@
 
 - name: Rook Cluster | Install rook cluster
   become: no
-  command: kubectl apply -f /tmp/cluster.yml 
+  command: kubectl apply -f /tmp/rook/cluster.yml
+  changed_when: false
 
 - name: Rook Toolbox | Install rook toolbox
   become: no
-  command: kubectl apply -f /tmp/toolbox.yml
+  command: kubectl apply -f /tmp/rook/toolbox.yml
+  changed_when: false
 
-- name: Rook File System | Install rook file system
+- name: Rook Object Storage | Install rook object storage
   become: no
-  command: kubectl apply -f /tmp/filesystem.yml
+  command: kubectl apply -f /tmp/rook/object.yml
+  changed_when: false
 
-- name: Rook Docker Registry | Install docker registry
+- name: Verify, if rook object storage is running
   become: no
-  command: kubectl apply -f /tmp/registry.yml
+  shell: kubectl -n rook-ceph get pod -l app=rook-ceph-rgw
+  register: rook_object_storage_out
+  until: rook_object_storage_out.stdout.find("Running") != -1
+  retries: 30
+  delay: 100
 
+- name: Rook Object User | Install rook object user
+  become: no
+  command: kubectl apply -f /tmp/rook/object-user.yml
+  changed_when: false
+
+- name: Verify, if rook object user is running
+  become: no
+  shell: kubectl -n rook-ceph get secret rook-ceph-object-user-my-store-my-user
+  register: rook_ceph_object_user_out
+  until: rook_ceph_object_user_out.stdout.find("rook-ceph-object-user-my-store-my-user") != -1
+  retries: 30
+  delay: 100
+
+- name: Show rook object storage
+  debug:
+    var: rook_ceph_object_user_out

@@ -1,0 +1,8 @@
+---
+- hosts: master
+  gather_facts: true
+  become: yes
+  roles:
+    - istio
+    #- ambassador # Uncomment if you want to use istio and comment out ambassador
+    

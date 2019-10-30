@@ -1,0 +1,8 @@
+# Distribution / packaging
+dist/
+downloads/
+eggs/
+.vagrant/
+lib/
+*.log
+join-command

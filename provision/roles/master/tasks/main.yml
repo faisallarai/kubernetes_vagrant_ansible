@@ -1,6 +1,6 @@
 - name: Initialize kubeadm on master
   become: yes
-  shell: kubeadm reset -f && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16
+  shell: kubeadm reset -f && kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=172.168.10.0/24 --service-cidr=192.168.0.0/16
   register: kubeadm_out
   args:
     creates: /etc/kubeadm-join.sh

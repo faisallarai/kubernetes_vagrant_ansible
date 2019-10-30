@@ -1,0 +1,4 @@
+---
+- import_playbook: hydra.yml
+- import_playbook: consent.yml
+- import_playbook: oauthkeeper.yml

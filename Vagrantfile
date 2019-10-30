@@ -62,8 +62,8 @@ Vagrant.configure("2") do |config|
         vb.memory = node[:memory]
         vb.cpus = 2
         vb.gui = false
-        #vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
-        #vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
+        vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+        vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
         vb.customize ['modifyvm', :id, '--macaddress1', "5CA1AB1E00"+node[:id]]
         #vb.customize ['modifyvm', :id, '--natnet1', "192.168/16"]
       end

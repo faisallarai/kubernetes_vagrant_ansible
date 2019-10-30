@@ -1,0 +1,54 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: hydra-gateway
+  namespace: hydra-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http-system
+        protocol: HTTP
+      hosts:
+      - "admin.hydra.com"
+      - "public.hydra.com"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: hydra-admin
+spec:
+  hosts:
+    - admin.hydra.com
+  gateways:
+    - hydra-gateway.hydra-system
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            port:
+              number: 4445
+            host: hydra-admin
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: hydra-public
+spec:
+  hosts:
+    - public.hydra.com
+  gateways:
+    - hydra-gateway.hydra-system
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            port:
+              number: 4444
+            host: hydra-public

@@ -1,0 +1,7 @@
+---
+- hosts: master
+  gather_facts: true
+  become: yes
+  roles:
+    - oauth
+    - bookinfo 

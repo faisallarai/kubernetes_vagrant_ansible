@@ -1,0 +1,8 @@
+---
+- import_playbook: master.yml
+- import_playbook: worker.yml
+- import_playbook: helm.yml
+- import_playbook: storage.yml
+#- import_playbook: logging.yml
+- import_playbook: lb.yml
+- import_playbook: ingress.yml

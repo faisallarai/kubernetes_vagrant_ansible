@@ -1,0 +1,34 @@
+---
+- name: Add helm chart repo
+  become: no
+  command: helm repo add ory https://k8s.ory.sh/helm/charts
+  changed_when: false
+
+- name: Update helm repo
+  become: no
+  command: helm repo update
+  changed_when: false
+
+- name: Copy Hydra files
+  copy:
+    src: files/
+    dest: /tmp/consent
+    owner: vagrant
+    group: vagrant
+  changed_when: false
+
+- name: Create namespace hydra-system
+  become: no
+  command: kubectl apply -f /tmp/consent/namespace.yaml
+  changed_when: false
+
+- name: Install Consent 
+  become: no
+  shell: > 
+    helm template /tmp/consent/example-idp --name example-idp --namespace hydra-system | kubectl apply -f -
+  changed_when: false
+
+- name: Create gateway hydra-system
+  become: no
+  command: kubectl apply -f /tmp/consent/gateway.yml
+  changed_when: false

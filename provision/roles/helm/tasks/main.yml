@@ -34,11 +34,6 @@
   command: kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
   when: tiller_result.stdout == ""
 
-# - name: Initialize helm
-#   become: no
-#   command: helm init --debug
-#   register: helm_init_result
-
 - name: Copy tiller file with owner and permission
   copy:
     src: files/tiller.yml
@@ -52,14 +47,6 @@
   command: kubectl apply -f /tmp/tiller.yml
   changed_when: false
 
-# - name: Show helm init result
-#   debug:
-#     msg: "{{ helm_init_result.stdout_lines }}"
-
-- name: Update Helm repos
-  become: no
-  shell: helm repo update
-
 - name: Verify, if Tiller was installed at last
   become: no
   shell: kubectl get pods --namespace kube-system -l name=tiller
@@ -67,3 +54,8 @@
   until: kubectl_kube_system_pods.stdout.find("Running") != -1
   retries: 30
   delay: 20
+
+- name: Helm initialize
+  become: no
+  command: helm init --client-only
+  changed_when: false
